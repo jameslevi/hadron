@@ -42,6 +42,13 @@ class Query
     private $affected_rows = 0;
 
     /**
+     * Determine if each row of result is object.
+     * 
+     * @var bool
+     */
+    private $object_results = false;
+
+    /**
      * Construct a new query response object.
      *
      * @param   \PDO
@@ -49,10 +56,11 @@ class Query
      * @param   array $params
      * @return  void
      */
-    public function __construct(PDO $pdo, string $sql, array $params)
+    public function __construct(PDO $pdo, string $sql, array $params, bool $object_results)
     {
-        $this->pdo = $pdo;
-        $this->sql = $sql;
+        $this->pdo                  = $pdo;
+        $this->sql                  = $sql;
+        $this->object_results       = $object_results;
 
         foreach($params as $key => $value)
         {
@@ -95,7 +103,7 @@ class Query
 
         $stmt->closeCursor();
 
-        return new Response($stmt, $result);
+        return new Response($result, $this->object_results);
     }
 
     /**

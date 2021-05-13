@@ -2,17 +2,10 @@
 
 namespace Graphite\Component\Hadron;
 
-use PDOStatement;
+use Graphite\Component\Objectify\Objectify;
 
 class Response
 {
-    /**
-     * PDOStatement object of the query.
-     *
-     * @var \PDOStatement
-     */
-    private $stmt;
-    
     /**
      * Results of the query.
      *
@@ -21,16 +14,38 @@ class Response
     private $results;
 
     /**
+     * Determine if each row must be an object.
+     * 
+     * @var bool
+     */
+    private $object_results = false;
+
+    /**
      * Construct a new response object.
      *
-     * @param   \PDOStatement $stmt
      * @param   array $results
+     * @param   bool $object_results
      * @return  void
      */
-    public function __construct(PDOStatement $stmt, array $results)
+    public function __construct(array $results, bool $object_results)
     {
-        $this->stmt     = $stmt;
-        $this->results  = $results;
+        $this->object_results = $object_results;
+
+        if($object_results)
+        {
+            $data = array();
+
+            foreach($results as $result)
+            {
+                $data[] = new Objectify($result, true);
+            }
+
+            $this->results = $data;
+        }
+        else
+        {
+            $this->results = $results;
+        }
     }
 
     /**
@@ -66,9 +81,9 @@ class Response
      *
      * @return  array
      */
-    public function columns()
+    public function columnNames()
     {
-        return array_keys($this->first());
+        return $this->object_results ? $this->first()->keys() : array_keys($this->first());
     }
 
     /**
@@ -88,9 +103,16 @@ class Response
         }
         else
         {
-            if(array_key_exists($key, $data))
+            if($this->object_results)
             {
-                return $data[$key];
+                return $data->get($key);
+            }
+            else
+            {
+                if(array_key_exists($key, $data))
+                {
+                    return $data[$key];
+                }
             }
         }
     }
@@ -138,13 +160,37 @@ class Response
     }
 
     /**
-     * Return the result data in array.
+     * Return the all results.
      *
+     * @return  array
+     */
+    public function all()
+    {
+        return $this->results;
+    }
+
+    /**
+     * Return result as array.
+     * 
      * @return  array
      */
     public function toArray()
     {
-        return $this->results;
+        $data = array();
+
+        foreach($this->results as $result)
+        {
+            if($result instanceof Objectify)
+            {
+                $data[] = $result->toArray();
+            }
+            else
+            {
+                $data[] = $result;
+            }
+        }
+
+        return $data;
     }
 
     /**

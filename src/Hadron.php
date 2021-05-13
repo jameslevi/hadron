@@ -22,7 +22,7 @@ class Hadron
     private $connection;
 
     /**
-     * Store PDO options.
+     * Default PDO options.
      *
      * @var array
      */
@@ -33,22 +33,9 @@ class Hadron
         PDO::MYSQL_ATTR_USE_BUFFERED_QUERY  => true,
         PDO::ATTR_STRINGIFY_FETCHES         => false,
         PDO::ATTR_EMULATE_PREPARES          => true,
+        PDO::ATTR_PERSISTENT                => true,
         PDO::MYSQL_ATTR_FOUND_ROWS          => true,
     );
-
-    /**
-     * DSN string of the PDO instance.
-     *
-     * @var string
-     */
-    private $dsn;
-
-    /**
-     * Database driver to use.
-     *
-     * @var string
-     */
-    private $driver;
 
     /**
      * Name of the database.
@@ -65,32 +52,32 @@ class Hadron
     private $server_name = 'localhost';
 
     /**
-     * Username of the connection.
+     * Charset to use.
      *
+     * @var string
+     */
+    private $charset = 'utf8mb4';
+
+    /**
+     * MySQL username.
+     * 
      * @var string
      */
     private $username;
 
     /**
-     * Password of the connection.
-     *
+     * MySQL password.
+     * 
      * @var string
      */
     private $password;
-
-    /**
-     * Charset to use.
-     *
-     * @var string
-     */
-    private $charset;
 
     /**
      * Port number to use.
      *
      * @var int
      */
-    private $port;
+    private $port = 3306;
 
     /**
      * Dertermine if connection has succeeded.
@@ -100,16 +87,22 @@ class Hadron
     private $connected = false;
 
     /**
+     * Determine if results are encapsulated in objects.
+     * 
+     * @var bool
+     */
+    private $object_results = true;
+
+    /**
      * Construct a new Hadron instance.
      *
      * @param   string $database
      * @param   string $alias
      * @return  void
      */
-    public function __construct(string $database, string $alias = null, array $options = [])
+    public function __construct(string $database, string $alias = null)
     {
         $this->database = $database;
-        $this->options  = $options;
         
         $this->register($alias);
     }
@@ -132,7 +125,7 @@ class Hadron
     /**
      * Generate DSN string.
      *
-     * @return void
+     * @return  string
      */
     private function makeDSN()
     {
@@ -141,25 +134,26 @@ class Hadron
         $charset    = $this->charset;
         $port       = $this->port;
 
-        $dsn = "mysql:host=$host;dbname=$database";
+        return "mysql:host=$host;dbname=$database;&charset=$charset;port=$port";
+    }
 
-        if(!is_null($charset))
-        {
-            $dsn .= ";charset=$charset";
-        }
+    /**
+     * Make each row of result as object.
+     * 
+     * @param   bool $result
+     * @return  $this
+     */
+    public function setResultAsObject(bool $result)
+    {
+        $this->object_results = $result;
 
-        if(!is_null($port))
-        {
-            $dsn .= ";port=$port";
-        }
-
-        $this->dsn = $dsn;
+        return $this;
     }
     
     /**
      * Start PDO connection with the database.
      *
-     * @return bool
+     * @return  bool
      */
     public function connect()
     {
@@ -167,25 +161,13 @@ class Hadron
         {
             try
             {
-                $this->makeDSN();
-                $this->connection = new PDO($this->dsn, $this->username, $this->password, $this->options);
+                $this->connection = new PDO($this->makeDSN(), $this->username, $this->password, $this->options);
                 $this->connected  = true;
             }
-            catch(PDOException $e)
-            {
-                echo $e->getMessage();
-            }
+            catch(PDOException $e) {}
         }
-    }
 
-    /**
-     * Return the current database driver.
-     *
-     * @return string
-     */
-    public function getDriver()
-    {
-        return $this->driver;
+        return $this->connected;
     }
 
     /**
@@ -222,18 +204,8 @@ class Hadron
     }
 
     /**
-     * Return the username of the current connection.
-     *
-     * @return string
-     */
-    public function getUsername()
-    {
-        return $this->username;
-    }
-
-    /**
-     * Set connection username.
-     *
+     * Set MySQL username.
+     * 
      * @param   string $username
      * @return  $this
      */
@@ -245,18 +217,8 @@ class Hadron
     }
 
     /**
-     * Return the password of the current connection.
-     *
-     * @return string
-     */
-    public function getPassword()
-    {
-        return $this->password;
-    }
-
-    /**
-     * Set connection password.
-     *
+     * Set MySQL password.
+     * 
      * @param   string $password
      * @return  $this
      */
@@ -324,16 +286,6 @@ class Hadron
     }
 
     /**
-     * Determine if queries are buffered.
-     *
-     * @return boolean
-     */
-    public function isBuffered()
-    {
-        return $this->options[PDO::MYSQL_ATTR_USE_BUFFERED_QUERY];
-    }
-
-    /**
      * Execute a mysql query and return response object.
      *
      * @param   string $query
@@ -342,7 +294,7 @@ class Hadron
      */
     public function query(string $query, array $params = [])
     {
-        return new Query($this->connection, $query, $params);
+        return new Query($this->connection, $query, $params, $this->object_results);
     }
 
     /**
@@ -352,17 +304,18 @@ class Hadron
      */
     public function close()
     {
+        $this->connected = false;
         $this->connection = null;
 
         return $this;
     }
 
     /**
-     * Dynamically return registered hadron objects.
+     * Dynamically return registered instances.
      *
      * @param   string $database
      * @param   array $arguments
-     * @return  Hadron
+     * @return  \Graphite\Component\Hadron\Hadron
      */
     public static function __callStatic(string $database, array $arguments)
     {
@@ -374,5 +327,15 @@ class Hadron
         {
             return new self($database);
         }
+    }
+
+    /**
+     * Return current version.
+     * 
+     * @return  string
+     */
+    public static function version()
+    {
+        return 'Hadron version 1.0.0';
     }
 }

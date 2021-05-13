@@ -1,9 +1,11 @@
 {
     "name": "jameslevi/hadron",
-    "description": "Is a simple PDO abstraction library for MySQL in PHP.",
+    "description": "Is a simple PDO library for MySQL in PHP.",
     "type": "library",
     "license": "MIT",
-    "require": {},
+    "require": {
+        "jameslevi/objectify": "^1.0"
+    },
     "autoload": {
         "psr-4": {
             "Graphite\\Component\\Hadron\\": "src/"
