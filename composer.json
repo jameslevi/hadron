@@ -1,6 +1,6 @@
 {
     "name": "jameslevi/hadron",
-    "description": "Is a simple PDO library for MySQL in PHP.",
+    "description": "Is a simple PHP library for MySQL using PDO.",
     "type": "library",
     "license": "MIT",
     "require": {
