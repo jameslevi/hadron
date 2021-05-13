@@ -22,7 +22,7 @@ class Hadron
     private $connection;
 
     /**
-     * Default PDO options.
+     * Set default PDO options.
      *
      * @var array
      */
@@ -193,7 +193,7 @@ class Hadron
     /**
      * Set servername to use.
      *
-     * @param   string $servername
+     * @param   string $server_name
      * @return  $this
      */
     public function setServerName(string $server_name)
@@ -217,6 +217,16 @@ class Hadron
     }
 
     /**
+     * Return current username.
+     * 
+     * @return  string
+     */
+    public function getUsername()
+    {
+        return $this->username;
+    }
+
+    /**
      * Set MySQL password.
      * 
      * @param   string $password
@@ -227,6 +237,28 @@ class Hadron
         $this->password = $password;
 
         return $this;
+    }
+
+    /**
+     * Return current password.
+     * 
+     * @return  string
+     */
+    public function getPassword()
+    {
+        return $this->password;
+    }
+
+    /**
+     * Set MySQL username and password.
+     * 
+     * @param   string $username
+     * @param   string $password
+     * @return  $this
+     */
+    public function setCredentials(string $username, string $password)
+    {
+        return $this->setUsername($username)->setPassword($password);
     }
 
     /**
