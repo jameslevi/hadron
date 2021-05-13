@@ -56,9 +56,18 @@ class Response
      */
     public function __get(string $column)
     {
-        if($this->numRows() == 1 && array_key_exists($column, $this->first()))
+        if($this->numRows() == 1)
         {
-            return $this->first()[$column];
+            $data = $this->first();
+
+            if(is_array($data) && array_key_exists($column, $data))
+            {
+                return $this->first()[$column];
+            }
+            else
+            {
+                return $data->get($column);
+            }
         }
         else
         {
@@ -66,9 +75,13 @@ class Response
 
             foreach($this->results as $result)
             {
-                if(array_key_exists($column, $result))
+                if(is_array($result) && array_key_exists($column, $result))
                 {
                     $values[] = $result[$column];
+                }
+                else
+                {
+                    $value[] = $result->get($column);
                 }
             }
 
