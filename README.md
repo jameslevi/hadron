@@ -78,17 +78,14 @@ $conn->connect();
 ```
 8. You can determine if connection was established using isConnected method.
 ```php
-if($conn->isConnected())
-{
-    echo 'You are now connected with your database';
-}
+$conn->isConnected();
 ```
 9. Always close each connection after use.
 ```php
 $conn->close();
 ```
 
-## Selecting data from the database
+## Getting data from the database
 1. Use get method when your query expects result from the database.
 ```php
 $query = $conn->query('SELECT first_name, last_name, gender FROM members')->get();
@@ -99,10 +96,7 @@ $count = $query->numRows();
 ```
 3. You can check if the query returns nothing.
 ```php
-if($query->empty())
-{
-    echo 'The query returns nothing.';
-}
+$query->empty();
 ```
 4. You can get the first and the last row of the result.
 ```php
@@ -145,10 +139,7 @@ $query->exec();
 ```
 2. You can determine if query is a success.
 ```php
-if($query->success())
-{
-    echo 'Query is a success';
-}
+$query->success();
 ```
 3. You can also know how many rows your query has affected.
 ```php
