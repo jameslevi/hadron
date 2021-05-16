@@ -111,11 +111,11 @@ var_dump($query->get(11)); // Return the 11th result.
 ```php
 echo $query->first_name . ' ' . $query->last_name;
 ```
-7. And if query returns a multiple row.
+7. And if query returns a multiple row, you can access each column like object properties.
 ```php
 foreach($query->all() as $member)
 {
-    echo $member->first_name . ' ' . $member->last_name . '<br />';
+    echo $member->name;
 }
 ```
 8. You can return the result as an array.
